@@ -1,112 +1,63 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.constants.Constants;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.validation.FilmValidator;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping(Constants.FILMS_PATH)
+@RequestMapping("/films")
 @Slf4j
 public class FilmController {
     private final Map<Integer, Film> films = new HashMap<>();
+    private final FilmValidator filmValidator;
     private int idCounter = 1;
+
+    @Autowired
+    public FilmController() {
+        this.filmValidator = new FilmValidator();
+    }
 
     @GetMapping
     public List<Film> getAllFilms() {
-        log.debug(Constants.RECEIVE_GET_REQUEST + Constants.FILMS_PATH);
-        log.debug(Constants.CURRENT_FILM_COUNT, films.size());
-        return List.copyOf(films.values());
+        log.debug("- getResponse: Текущее количество фильмов: {}", films.size());
+
+        return new ArrayList<>(films.values());
     }
 
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film film) {
-        log.debug(Constants.RECEIVE_POST_REQUEST + Constants.FILMS_PATH);
-        if (film != null) {
-            isFilmTitleValid(film);
-        } else {
-            log.warn(Constants.RECEIVED_EMPTY_REQUEST);
-            throw new ValidationException(Constants.RECEIVED_EMPTY_REQUEST);
+    public Film addFilm(@Valid @RequestBody Film film) {
+        log.debug("+ postResponse: {}", film);
+        boolean valid = filmValidator.validate(film);
+        if (valid) {
+            film.setId(getIdCounter());
+            films.put(film.getId(), film);
+            log.debug("- postResponse: {}", film);
         }
-        log.debug(Constants.ADDED_NEW_FILM + film.getId());
+        log.debug("- createFilm() add film: {}", valid);
+
         return film;
     }
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
-        log.debug(Constants.RECEIVED_PUT_REQUEST + Constants.FILMS_PATH);
-        if (film != null) {
-            isUpdatedFilmHasId(film);
-        } else {
-            log.warn(Constants.RECEIVED_EMPTY_REQUEST);
-            throw new ValidationException(Constants.RECEIVED_EMPTY_REQUEST);
-        }
+        log.debug("+ putResponse: {}", film);
+        filmValidator.validateFilmHasId(films, film);
+        log.debug("- putResponse: {}", film);
 
         return film;
-    }
-
-    private void isUpdatedFilmHasId(Film film) {
-        if (film.getId() != null && films.containsKey(film.getId())) {
-            films.replace(film.getId(), film);
-        } else {
-            log.warn(Constants.FILM_HAS_NO_ID);
-            throw new ValidationException(Constants.FILM_HAS_NO_ID + Constants.PLEASE_FIX_AND_TRY_AGAIN);
-        }
-        log.debug(Constants.UPDATED_FILM + film.getId());
-    }
-
-    private void isFilmTitleValid(Film film) {
-        if (film.getName().isBlank()) {
-            log.warn(Constants.FILM_HAS_NO_NAME);
-            throw new ValidationException(Constants.FILM_HAS_NO_NAME + Constants.PLEASE_FIX_AND_TRY_AGAIN);
-        }
-        isFilmDescriptionLengthValid(film);
-    }
-
-    private void isFilmDescriptionLengthValid(Film film) {
-        if (film.getDescription().length() >= 200 || film.getDescription().isBlank()) {
-            log.warn(Constants.FILM_MAX_DESCRIPTION_LENGTH);
-            throw new ValidationException(Constants.FILM_MAX_DESCRIPTION_LENGTH);
-        }
-        isFilmReleaseDateNotEmpty(film);
-    }
-
-    private void isFilmReleaseDateNotEmpty(Film film) {
-        if (film.getReleaseDate() == null) {
-            log.warn(Constants.FILM_HAS_NO_RELEASE_DATE);
-        }
-        isFilmReleaseDateValid(film);
-    }
-
-    private void isFilmReleaseDateValid(Film film) {
-        LocalDate releaseDate = film.getReleaseDate();
-        if (releaseDate == null || releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn(Constants.FILM_INVALID_RELEASE_DATE);
-            throw new ValidationException(Constants.FILM_INVALID_RELEASE_DATE);
-        }
-        isFilmDurationPositive(film);
-    }
-
-    private void isFilmDurationPositive(Film film) {
-        if (film.getDuration() > 0) {
-            setNewFilmID(film);
-            films.put(film.getId(), film);
-        } else {
-            log.warn(Constants.FILM_DURATION_INVALID);
-            throw new ValidationException(Constants.FILM_DURATION_INVALID);
-        }
-    }
-
-    private void setNewFilmID(Film film) {
-        film.setId(getIdCounter());
-        films.put(film.getId(), film);
     }
 
     public int getIdCounter() {
