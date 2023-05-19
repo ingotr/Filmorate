@@ -26,7 +26,12 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
         log.debug("Получен запрос POST /films.");
-        isFilmTitleValid(film);
+        if (film != null) {
+            isFilmTitleValid(film);
+        } else {
+            log.warn("Отправлен пустой запрос");
+            throw new ValidationException("Отправлен пустой запрос");
+        }
         log.debug("Добавлен новый фильм с Id: " + film.getId());
         return film;
     }
@@ -34,17 +39,24 @@ public class FilmController {
     @PutMapping
     public Film updateFilm(@RequestBody Film film) {
         log.debug("Получен запрос PUT /films.");
-        try {
-            if (film.getId() != 0) {
-                films.replace(film.getId(), film);
-            }
+        if (film != null) {
+            isUpdatedFilmHasId(film);
+        } else {
+            log.warn("Отправлен пустой запрос");
+            throw new ValidationException("Отправлен пустой запрос");
+        }
 
-        } catch (RuntimeException e) {
+        return film;
+    }
+
+    private void isUpdatedFilmHasId(Film film) {
+        if (film.getId() != null) {
+            films.replace(film.getId(), film);
+        } else {
             log.warn("Не указан Id фильма");
             throw new ValidationException("Не указан Id фильма. Укажите и попробуйте снова");
         }
         log.debug("Обновлен фильм с Id: " + film.getId());
-        return film;
     }
 
     private void isFilmTitleValid(Film film) {
@@ -57,20 +69,28 @@ public class FilmController {
     }
 
     private void isFilmDescriptionLengthValid(Film film) {
-        if (film.getDescription().length() <= 200) {
+        if (film.getDescription().length() < 200 && !film.getDescription().isBlank()) {
+            isFilmReleaseDateNotEmpty(film);
+        } else {
+            log.warn("Длина описания больше 200 символов или пустое");
+            throw new ValidationException("Максимальная длина описания - 200 символов. Или пустая");
+        }
+    }
+
+    private void isFilmReleaseDateNotEmpty(Film film) {
+        if (film.getReleaseDate().isPresent()) {
             isFilmReleaseDateValid(film);
         } else {
-            log.warn("Длина описания больше 200 символов");
-            throw new ValidationException("Максимальная длина описания - 200 символов.");
+            log.warn("Дата релиза не указана");
         }
     }
 
     private void isFilmReleaseDateValid(Film film) {
-        if (!film.getReleaseDate().isBefore(LocalDateTime.of(1895, 12, 28, 1, 1))) {
+        if (!film.getReleaseDate().get().isBefore(LocalDateTime.of(1895, 12, 28, 1, 1))) {
             isFilmDurationPositive(film);
         } else {
             log.warn("Дата релиза раньше 28 декабря 1895 года");
-            throw new ValidationException("Дата релиза — не может быть раньше 28 декабря 1895 года");
+            throw new ValidationException("Дата релиза — не может быть раньше 28 декабря 1895 года.");
         }
     }
 

@@ -4,13 +4,14 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Data
 @Builder
 public class Film {
-    private final int id;
+    private final Integer id;
     private final String name;
     private final String description;
-    private final LocalDateTime releaseDate;
+    private final Optional<LocalDateTime> releaseDate;
     private final int duration;
 }
