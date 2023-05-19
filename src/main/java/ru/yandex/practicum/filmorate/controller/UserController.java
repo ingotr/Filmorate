@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +27,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public User createUser(@Valid @RequestBody User user) {
         log.debug("Получен запрос POST /users.");
         if (user != null) {
             isUserEmailValid(user);
@@ -39,7 +40,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User user) {
+    public User updateUser(@Valid @RequestBody User user) {
         log.debug("Получен запрос PUT /users.");
         if (user != null) {
             isUpdatedUserHasId(user);
@@ -62,7 +63,7 @@ public class UserController {
     }
 
     private void isUserEmailValid(User user) {
-        if (!user.getEmail().isBlank() && user.getEmail().contains("@")) {
+        if (!user.getEmail().isBlank()) {
             isUserLoginValid(user);
         } else {
             log.warn("Не указана электронная почта либо неверный формат почты");
