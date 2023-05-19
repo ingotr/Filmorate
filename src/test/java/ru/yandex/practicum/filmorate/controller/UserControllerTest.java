@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import ru.yandex.practicum.filmorate.constants.Constants;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -39,8 +40,8 @@ class UserControllerTest {
 
         User newUser = userController.createUser(user);
         List<User> users = userController.getAllUsers();
-        assertNotNull(newUser, "Новый пользователь не найден");
-        assertEquals(user, newUser, "Отправленный и добавленный пользователь отличаются");
+        assertNotNull(newUser, Constants.NEW_USER_NOT_FOUND);
+        assertEquals(user, newUser, Constants.RECEIVED_AND_NEW_USER_DIFFERENT);
         log.debug("users" + users);
         assertEquals(1, users.size(), "Число пользователей отличается от 1");
 
@@ -54,7 +55,7 @@ class UserControllerTest {
                 .build();
 
         assertThrows(ValidationException.class, () -> userController.createUser(userWithEmptyEmail),
-                "Электронная почта не указана.");
+                Constants.USER_HAS_NO_EMAIL);
         assertEquals(1, users.size(), "Число пользователей отличается от 1");
 
         //Пустой логин
@@ -67,7 +68,7 @@ class UserControllerTest {
                 .build();
 
         assertThrows(ValidationException.class, () -> userController.createUser(userWithEmptyLogin),
-                "Логин пустой.");
+                Constants.USER_HAS_NO_LOGIN);
         assertEquals(1, users.size(), "Число пользователей больше 1");
 
         //Дата рождения не может быть в будущем
@@ -80,12 +81,12 @@ class UserControllerTest {
                 .build();
 
         assertThrows(ValidationException.class, () -> userController.createUser(userWithBirthdayInFuture),
-                "Дата рождения пользователя в будущем.");
+                Constants.USER_BIRTHDAY_IN_FUTURE);
         assertEquals(1, users.size(), "Число пользователей больше 1");
 
         //Пустой запрос
         assertThrows(ValidationException.class, () -> userController.createUser(null),
-                "Отправлен пустой запрос");
+                Constants.RECEIVED_EMPTY_REQUEST);
         assertEquals(1, users.size(), "Число пользователей больше 1");
 
     }
@@ -102,12 +103,12 @@ class UserControllerTest {
                 .build();
         List<User> users = userController.getAllUsers();
         assertThrows(ValidationException.class, () -> userController.updateUser(userWithEmptyId),
-                "Не указан Id пользователя. Укажите и попробуйте снова");
+                Constants.USER_HAS_NO_ID);
         assertEquals(0, users.size(), "Число пользователей больше 0");
 
         //Пустой запрос
         assertThrows(ValidationException.class, () -> userController.updateUser(null),
-                "Отправлен пустой запрос");
+                Constants.RECEIVED_EMPTY_REQUEST);
         assertEquals(0, users.size(), "Число пользователей больше 0");
     }
 

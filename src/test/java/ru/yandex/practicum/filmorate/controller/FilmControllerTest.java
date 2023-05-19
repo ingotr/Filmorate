@@ -2,12 +2,12 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import ru.yandex.practicum.filmorate.constants.Constants;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,14 +33,14 @@ class FilmControllerTest {
                 .id(1)
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
+                .releaseDate(LocalDate.of(1994, 5, 24))
                 .duration(154)
                 .build();
 
         Film newFilm = filmController.createFilm(film);
         List<Film> films = filmController.getAllFilms();
-        assertNotNull(newFilm, "Новый фильм не найден");
-        assertEquals(film, newFilm, "Отправленный и добавленный фильм отличаются");
+        assertNotNull(newFilm, Constants.NEW_FILM_NOT_FOUND);
+        assertEquals(film, newFilm, Constants.RECEIVED_FILM_AND_NEW_FILM_DIFFERENT);
         assertEquals(1, films.size(), "Число фильмов больше 1");
 
         //Не указано название фильма
@@ -48,27 +48,23 @@ class FilmControllerTest {
                 .id(2)
                 .name("")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
+                .releaseDate(LocalDate.of(1994, 5, 24))
                 .duration(154)
                 .build();
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmWithEmptyTitle),
-                "Не указано название фильма. Укажите и попробуйте снова");
+                Constants.FILM_HAS_NO_NAME + Constants.PLEASE_FIX_AND_TRY_AGAIN);
         assertEquals(1, films.size(), "Число фильмов больше 1");
 
         //Длина описания больше 200 символов
-        String description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, \n" +
-                "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \n" +
-                "Ut enim ad minim veniam, quis nostrud exercitation ullamco aboris " +
-                "nisi ut aliquip ex ea commodo consequat.";
         Film filmWithLongDescription = Film.builder()
                 .id(3)
                 .name("Криминальное чтиво")
-                .description(description)
-                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
+                .description(Constants.LOREM_IPSUM)
+                .releaseDate(LocalDate.of(1994, 5, 24))
                 .duration(154)
                 .build();
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmWithLongDescription),
-                "Максимальная длина описания - 200 символов.");
+                Constants.FILM_MAX_DESCRIPTION_LENGTH);
         assertEquals(1, films.size(), "Число фильмов больше 1");
 
         //Описание фильма не указано
@@ -76,7 +72,7 @@ class FilmControllerTest {
                 .id(3)
                 .name("Криминальное чтиво")
                 .description("")
-                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
+                .releaseDate(LocalDate.of(1994, 5, 24))
                 .duration(154)
                 .build();
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmWithEmptyDescription),
@@ -88,12 +84,12 @@ class FilmControllerTest {
                 .id(1)
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDate.of(1844, 5, 24)))
+                .releaseDate(LocalDate.of(1844, 5, 24))
                 .duration(154)
                 .build();
 
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmBeforeValidDate),
-                "Дата релиза — не может быть раньше 28 декабря 1895 года");
+                Constants.FILM_INVALID_RELEASE_DATE);
         assertEquals(1, films.size(), "Число фильмов больше 1");
 
         //Дата релиза не указана
@@ -104,8 +100,8 @@ class FilmControllerTest {
                 .duration(154)
                 .build();
 
-        assertThrows(NullPointerException.class, () -> filmController.createFilm(filmNullReleaseDate),
-                "Дата релиза — не указана");
+        assertThrows(ValidationException.class, () -> filmController.createFilm(filmNullReleaseDate),
+                Constants.FILM_HAS_NO_RELEASE_DATE);
         assertEquals(1, films.size(), "Число фильмов больше 1");
 
         //Продолжительность фильма отрицательная
@@ -113,12 +109,12 @@ class FilmControllerTest {
                 .id(1)
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDate.of(1844, 5, 24)))
+                .releaseDate(LocalDate.of(1844, 5, 24))
                 .duration(-2)
                 .build();
 
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmValidDuration),
-                "Продолжительность фильма должна быть положительной");
+                Constants.FILM_DURATION_INVALID);
         assertEquals(1, films.size(), "Число фильмов больше 1");
 
         //Продолжительность равна 0
@@ -126,17 +122,17 @@ class FilmControllerTest {
                 .id(1)
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDate.of(1844, 5, 24)))
+                .releaseDate(LocalDate.of(1844, 5, 24))
                 .duration(0)
                 .build();
 
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmZeroDuration),
-                "Продолжительность фильма должна быть положительной");
+                Constants.FILM_DURATION_INVALID);
         assertEquals(1, films.size(), "Число фильмов больше 1");
 
         //Пустой запрос
         assertThrows(ValidationException.class, () -> filmController.createFilm(null),
-                "Отправлен пустой запрос");
+                Constants.RECEIVED_EMPTY_REQUEST);
         assertEquals(1, films.size(), "Число фильмов больше 1");
     }
 
@@ -147,17 +143,17 @@ class FilmControllerTest {
         Film filmWithEmptyId = Film.builder()
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
+                .releaseDate(LocalDate.of(1994, 5, 24))
                 .duration(154)
                 .build();
         List<Film> films = filmController.getAllFilms();
         assertThrows(ValidationException.class, () -> filmController.updateFilm(filmWithEmptyId),
-                "Не указан Id фильма. Укажите и попробуйте снова");
+                Constants.FILM_HAS_NO_ID);
         assertEquals(0, films.size(), "Число фильмов больше 0");
 
         //Пустой запрос
         assertThrows(ValidationException.class, () -> filmController.updateFilm(null),
-                "Отправлен пустой запрос");
+                Constants.RECEIVED_EMPTY_REQUEST);
         assertEquals(0, films.size(), "Число фильмов больше 0");
     }
 

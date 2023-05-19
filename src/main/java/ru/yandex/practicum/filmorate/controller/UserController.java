@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.constants.Constants;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping(Constants.USERS_PATH)
 @Slf4j
 public class UserController {
     private final Map<Integer, User> users = new HashMap<>();
@@ -20,35 +21,34 @@ public class UserController {
 
     @GetMapping
     public List<User> getAllUsers() {
-        log.debug("Получен запрос GET /users.");
-        log.debug("Текущее количество пользователей: {}", users.size());
-        users.values();
+        log.debug(Constants.RECEIVE_GET_REQUEST + Constants.USERS_PATH);
+        log.debug(Constants.CURRENT_USER_COUNT, users.size());
         return List.copyOf(users.values());
     }
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
-        log.debug("Получен запрос POST /users.");
+        log.debug(Constants.RECEIVE_POST_REQUEST + Constants.USERS_PATH);
         if (user != null) {
             isUserEmailValid(user);
         } else {
-            log.warn("Отправлен пустой запрос");
-            throw new ValidationException("Отправлен пустой запрос");
+            log.warn(Constants.RECEIVED_EMPTY_REQUEST);
+            throw new ValidationException(Constants.RECEIVED_EMPTY_REQUEST);
         }
-        log.debug("Добавлен новый пользователь с Id: " + user.getId());
+        log.debug(Constants.ADDED_NEW_USER + user.getId());
         return user;
     }
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        log.debug("Получен запрос PUT /users.");
+        log.debug(Constants.RECEIVED_PUT_REQUEST + Constants.USERS_PATH);
         if (user != null) {
             isUpdatedUserHasId(user);
         } else {
-            log.warn("Отправлен пустой запрос");
-            throw new ValidationException("Отправлен пустой запрос");
+            log.warn(Constants.RECEIVED_EMPTY_REQUEST);
+            throw new ValidationException(Constants.RECEIVED_EMPTY_REQUEST);
         }
-        log.debug("Обновлен пользователь с Id: " + user.getId());
+        log.debug(Constants.UPDATE_USER + user.getId());
         return user;
     }
 
@@ -56,19 +56,18 @@ public class UserController {
         if (user.getId() != null && users.containsKey(user.getId())) {
             users.replace(user.getId(), user);
         } else {
-            log.warn("Не указан Id пользователя");
-            throw new ValidationException("Не указан Id пользователя. Укажите и попробуйте снова");
+            log.warn(Constants.USER_HAS_NO_ID);
+            throw new ValidationException(Constants.USER_HAS_NO_ID + Constants.PLEASE_FIX_AND_TRY_AGAIN);
         }
-        log.debug("Обновлен пользователь с Id: " + user.getId());
+        log.debug(Constants.UPDATE_USER + user.getId());
     }
 
     private void isUserEmailValid(User user) {
         if (!user.getEmail().isBlank()) {
             isUserLoginValid(user);
         } else {
-            log.warn("Не указана электронная почта либо неверный формат почты");
-            throw new ValidationException("Не указана электронная почта либо неверный формат почты: должна содержать @. " +
-                    "Укажите и попробуйте снова");
+            log.warn(Constants.USER_HAS_NO_EMAIL);
+            throw new ValidationException(Constants.USER_HAS_NO_EMAIL + Constants.PLEASE_FIX_AND_TRY_AGAIN);
         }
     }
 
@@ -76,8 +75,8 @@ public class UserController {
         if (!user.getLogin().isBlank()) {
             isUserBirthdayValid(user);
         } else {
-            log.warn("Пустой логин");
-            throw new ValidationException("Логин не может быть пустым");
+            log.warn(Constants.USER_HAS_NO_LOGIN);
+            throw new ValidationException(Constants.USER_HAS_NO_LOGIN);
         }
     }
 
@@ -85,8 +84,8 @@ public class UserController {
         if (!user.getBirthday().isAfter(LocalDate.now())) {
             isUserNameBlank(user);
         } else {
-            log.warn("Дата рождения не может быть в будущем");
-            throw new ValidationException("Дата рождения не может быть в будущем");
+            log.warn(Constants.USER_BIRTHDAY_IN_FUTURE);
+            throw new ValidationException(Constants.USER_BIRTHDAY_IN_FUTURE);
         }
     }
 
@@ -97,7 +96,7 @@ public class UserController {
             }
         } catch (NullPointerException e) {
             user.setName(user.getLogin());
-            log.warn("Новому пользователю передано пустое имя - будет заменено логином");
+            log.warn(Constants.NEW_USER_EMPTY_NAME_REPLACED_BY_LOGIN);
         }
         setNewUserID(user);
     }
