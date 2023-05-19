@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +12,7 @@ import java.util.Map;
 @RequestMapping("/films")
 public class FilmController {
     private final Map<Integer, Film> films = new HashMap<>();
+    private int idCounter = 1;
 
     @GetMapping
     public Map<Integer, Film> getAllFilms() {
@@ -18,13 +21,64 @@ public class FilmController {
 
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
-        films.put(film.getId(), film);
+        isFilmTitleValid(film);
         return film;
     }
 
     @PutMapping
     public Film updateFilm(@RequestBody Film film) {
-        films.replace(film.getId(), film);
+        try {
+            if (film.getId() != 0) {
+                films.replace(film.getId(), film);
+            }
+
+        } catch (RuntimeException e) {
+            throw new ValidationException("Не указан Id фильма. Укажите и попробуйте снова");
+        }
         return film;
+    }
+
+    private void isFilmTitleValid(Film film) {
+        try {
+            if (!film.getName().isBlank()) {
+                isFilmDescriptionLengthValid(film);
+            }
+        } catch (RuntimeException e) {
+            throw new ValidationException("Не указано название фильма. Укажите и попробуйте снова");
+        }
+    }
+
+    private void isFilmDescriptionLengthValid(Film film) {
+        try {
+            if (film.getDescription().length() <= 200) {
+                isFilmReleaseDateValid(film);
+            }
+        } catch (RuntimeException e) {
+            throw new ValidationException("Максимальная длина описания - 200 символов.");
+        }
+    }
+
+    private void isFilmReleaseDateValid(Film film) {
+        try {
+            if (!film.getReleaseDate().isBefore(LocalDateTime.of(1895, 12, 28, 1, 1))) {
+                isFilmDurationPositive(film);
+            }
+        } catch (RuntimeException e) {
+            throw new ValidationException("Дата релиза — не может быть раньше 28 декабря 1895 года");
+        }
+    }
+
+    private void isFilmDurationPositive(Film film) {
+        try {
+            if (film.getDuration() > 0) {
+                films.put(getIdCounter(), film);
+            }
+        } catch (RuntimeException e) {
+            throw new ValidationException("Продолжительность фильма должна быть положительной");
+        }
+    }
+
+    public int getIdCounter() {
+        return idCounter++;
     }
 }
