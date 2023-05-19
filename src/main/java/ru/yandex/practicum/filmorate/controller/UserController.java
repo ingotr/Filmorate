@@ -5,8 +5,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,10 +18,11 @@ public class UserController {
     private int idCounter = 1;
 
     @GetMapping
-    public Map<Integer, User> getAllUsers() {
+    public List<User> getAllUsers() {
         log.debug("Получен запрос GET /users.");
         log.debug("Текущее количество пользователей: {}", users.size());
-        return users;
+        users.values();
+        return List.copyOf(users.values());
     }
 
     @PostMapping
@@ -50,7 +52,7 @@ public class UserController {
     }
 
     private void isUpdatedUserHasId(User user) {
-        if (user.getId() != null) {
+        if (user.getId() != null && users.containsKey(user.getId())) {
             users.replace(user.getId(), user);
         } else {
             log.warn("Не указан Id пользователя");
@@ -79,7 +81,7 @@ public class UserController {
     }
 
     private void isUserBirthdayValid(User user) {
-        if (!user.getBirthday().isAfter(LocalDateTime.now())) {
+        if (!user.getBirthday().isAfter(LocalDate.now())) {
             isUserNameBlank(user);
         } else {
             log.warn("Дата рождения не может быть в будущем");
@@ -88,10 +90,20 @@ public class UserController {
     }
 
     private void isUserNameBlank(User user) {
-        if (user.getName().isBlank()) {
+        try {
+            if (user.getName().isBlank()) {
+                user.setName(user.getLogin());
+            }
+        } catch (NullPointerException e) {
             user.setName(user.getLogin());
+            log.warn("Новому пользователю передано пустое имя - будет заменено логином");
         }
-        users.put(getIdCounter(), user);
+        setNewUserID(user);
+    }
+
+    private void setNewUserID(User user) {
+        user.setId(getIdCounter());
+        users.put(user.getId(), user);
     }
 
     public int getIdCounter() {

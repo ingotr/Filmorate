@@ -5,8 +5,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,10 +18,11 @@ public class FilmController {
     private int idCounter = 1;
 
     @GetMapping
-    public Map<Integer, Film> getAllFilms() {
+    public List<Film> getAllFilms() {
         log.debug("Получен запрос GET /films.");
         log.debug("Текущее количество фильмов: {}", films.size());
-        return films;
+        films.values();
+        return List.copyOf(films.values());
     }
 
     @PostMapping
@@ -50,7 +52,7 @@ public class FilmController {
     }
 
     private void isUpdatedFilmHasId(Film film) {
-        if (film.getId() != null) {
+        if (film.getId() != null && films.containsKey(film.getId())) {
             films.replace(film.getId(), film);
         } else {
             log.warn("Не указан Id фильма");
@@ -86,7 +88,7 @@ public class FilmController {
     }
 
     private void isFilmReleaseDateValid(Film film) {
-        if (!film.getReleaseDate().get().isBefore(LocalDateTime.of(1895, 12, 28, 1, 1))) {
+        if (!film.getReleaseDate().get().isBefore(LocalDate.of(1895, 12, 28))) {
             isFilmDurationPositive(film);
         } else {
             log.warn("Дата релиза раньше 28 декабря 1895 года");
@@ -96,11 +98,17 @@ public class FilmController {
 
     private void isFilmDurationPositive(Film film) {
         if (film.getDuration() > 0) {
-            films.put(getIdCounter(), film);
+            setNewFilmID(film);
+            films.put(film.getId(), film);
         } else {
             log.warn("Продолжительность фильма отрицательная или равна 0");
             throw new ValidationException("Продолжительность фильма должна быть положительной");
         }
+    }
+
+    private void setNewFilmID(Film film) {
+        film.setId(getIdCounter());
+        films.put(film.getId(), film);
     }
 
     public int getIdCounter() {
