@@ -5,8 +5,8 @@ import org.junit.jupiter.api.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,12 +33,12 @@ class FilmControllerTest {
                 .id(1)
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDateTime.of(1994, 5, 24, 1, 1)))
+                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
                 .duration(154)
                 .build();
 
-        Map<Integer, Film> films = filmController.getAllFilms();
         Film newFilm = filmController.createFilm(film);
+        List<Film> films = filmController.getAllFilms();
         assertNotNull(newFilm, "Новый фильм не найден");
         assertEquals(film, newFilm, "Отправленный и добавленный фильм отличаются");
         assertEquals(1, films.size(), "Число фильмов больше 1");
@@ -48,7 +48,7 @@ class FilmControllerTest {
                 .id(2)
                 .name("")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDateTime.of(1994, 5, 24, 1, 1)))
+                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
                 .duration(154)
                 .build();
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmWithEmptyTitle),
@@ -64,7 +64,7 @@ class FilmControllerTest {
                 .id(3)
                 .name("Криминальное чтиво")
                 .description(description)
-                .releaseDate(Optional.of(LocalDateTime.of(1994, 5, 24, 1, 1)))
+                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
                 .duration(154)
                 .build();
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmWithLongDescription),
@@ -76,7 +76,7 @@ class FilmControllerTest {
                 .id(3)
                 .name("Криминальное чтиво")
                 .description("")
-                .releaseDate(Optional.of(LocalDateTime.of(1994, 5, 24, 1, 1)))
+                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
                 .duration(154)
                 .build();
         assertThrows(ValidationException.class, () -> filmController.createFilm(filmWithEmptyDescription),
@@ -88,7 +88,7 @@ class FilmControllerTest {
                 .id(1)
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDateTime.of(1844, 5, 24, 1, 1)))
+                .releaseDate(Optional.of(LocalDate.of(1844, 5, 24)))
                 .duration(154)
                 .build();
 
@@ -113,7 +113,7 @@ class FilmControllerTest {
                 .id(1)
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDateTime.of(1844, 5, 24, 1, 1)))
+                .releaseDate(Optional.of(LocalDate.of(1844, 5, 24)))
                 .duration(-2)
                 .build();
 
@@ -126,7 +126,7 @@ class FilmControllerTest {
                 .id(1)
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDateTime.of(1844, 5, 24, 1, 1)))
+                .releaseDate(Optional.of(LocalDate.of(1844, 5, 24)))
                 .duration(0)
                 .build();
 
@@ -147,10 +147,10 @@ class FilmControllerTest {
         Film filmWithEmptyId = Film.builder()
                 .name("Криминальное чтиво")
                 .description("Фильм Квентина Тарантино")
-                .releaseDate(Optional.of(LocalDateTime.of(1994, 5, 24, 1, 1)))
+                .releaseDate(Optional.of(LocalDate.of(1994, 5, 24)))
                 .duration(154)
                 .build();
-        Map<Integer, Film> films = filmController.getAllFilms();
+        List<Film> films = filmController.getAllFilms();
         assertThrows(ValidationException.class, () -> filmController.updateFilm(filmWithEmptyId),
                 "Не указан Id фильма. Укажите и попробуйте снова");
         assertEquals(0, films.size(), "Число фильмов больше 0");

@@ -5,8 +5,8 @@ import org.junit.jupiter.api.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,11 +34,11 @@ class UserControllerTest {
                 .email("ivanov@yandex.ru")
                 .login("ivanov93")
                 .name("Иван")
-                .birthday(LocalDateTime.of(1993, 7, 12, 1, 1))
+                .birthday(LocalDate.of(1993, 7, 12))
                 .build();
 
-        Map<Integer, User> users = userController.getAllUsers();
         User newUser = userController.createUser(user);
+        List<User> users = userController.getAllUsers();
         assertNotNull(newUser, "Новый пользователь не найден");
         assertEquals(user, newUser, "Отправленный и добавленный пользователь отличаются");
         log.debug("users" + users);
@@ -50,7 +50,7 @@ class UserControllerTest {
                 .email("")
                 .login("ivanov93")
                 .name("Иван")
-                .birthday(LocalDateTime.of(1993, 7, 12, 1, 1))
+                .birthday(LocalDate.of(1993, 7, 12))
                 .build();
 
         assertThrows(ValidationException.class, () -> userController.createUser(userWithEmptyEmail),
@@ -63,7 +63,7 @@ class UserControllerTest {
                 .email("ivanov@yandex.ru")
                 .login("")
                 .name("Иван")
-                .birthday(LocalDateTime.of(1993, 7, 12, 1, 1))
+                .birthday(LocalDate.of(1993, 7, 12))
                 .build();
 
         assertThrows(ValidationException.class, () -> userController.createUser(userWithEmptyLogin),
@@ -76,7 +76,7 @@ class UserControllerTest {
                 .email("ivanov@yandex.ru")
                 .login("ivanov93")
                 .name("Иван")
-                .birthday(LocalDateTime.of(2024, 5, 14, 1, 1))
+                .birthday(LocalDate.of(2024, 5, 14))
                 .build();
 
         assertThrows(ValidationException.class, () -> userController.createUser(userWithBirthdayInFuture),
@@ -98,9 +98,9 @@ class UserControllerTest {
                 .email("ivanov@yandex.ru")
                 .login("ivanov93")
                 .name("Иван")
-                .birthday(LocalDateTime.of(1993, 7, 12, 1, 1))
+                .birthday(LocalDate.of(1993, 7, 12))
                 .build();
-        Map<Integer, User> users = userController.getAllUsers();
+        List<User> users = userController.getAllUsers();
         assertThrows(ValidationException.class, () -> userController.updateUser(userWithEmptyId),
                 "Не указан Id пользователя. Укажите и попробуйте снова");
         assertEquals(0, users.size(), "Число пользователей больше 0");
