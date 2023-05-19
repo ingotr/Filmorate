@@ -26,7 +26,12 @@ public class UserController {
     @PostMapping
     public User createUser(@RequestBody User user) {
         log.debug("Получен запрос POST /users.");
-        isUserEmailValid(user);
+        if (user != null) {
+            isUserEmailValid(user);
+        } else {
+            log.warn("Отправлен пустой запрос");
+            throw new ValidationException("Отправлен пустой запрос");
+        }
         log.debug("Добавлен новый пользователь с Id: " + user.getId());
         return user;
     }
@@ -34,25 +39,30 @@ public class UserController {
     @PutMapping
     public User updateUser(@RequestBody User user) {
         log.debug("Получен запрос PUT /users.");
-        try {
-            if (user.getId() != 0) {
-                users.replace(user.getId(), user);
-            }
-
-        } catch (RuntimeException e) {
-            log.warn("Не указан Id пользователя");
-            throw new ValidationException("Не указан Id пользователя. Укажите и попробуйте снова");
+        if (user != null) {
+            isUpdatedUserHasId(user);
+        } else {
+            log.warn("Отправлен пустой запрос");
+            throw new ValidationException("Отправлен пустой запрос");
         }
         log.debug("Обновлен пользователь с Id: " + user.getId());
         return user;
     }
 
+    private void isUpdatedUserHasId(User user) {
+        if (user.getId() != null) {
+            users.replace(user.getId(), user);
+        } else {
+            log.warn("Не указан Id пользователя");
+            throw new ValidationException("Не указан Id пользователя. Укажите и попробуйте снова");
+        }
+        log.debug("Обновлен пользователь с Id: " + user.getId());
+    }
+
     private void isUserEmailValid(User user) {
-        try {
-            if (user.getEmail().isBlank() && user.getEmail().contains("@")) {
-                isUserLoginValid(user);
-            }
-        } catch (RuntimeException e) {
+        if (!user.getEmail().isBlank() && user.getEmail().contains("@")) {
+            isUserLoginValid(user);
+        } else {
             log.warn("Не указана электронная почта либо неверный формат почты");
             throw new ValidationException("Не указана электронная почта либо неверный формат почты: должна содержать @. " +
                     "Укажите и попробуйте снова");
@@ -60,32 +70,28 @@ public class UserController {
     }
 
     private void isUserLoginValid(User user) {
-        try {
+        if (!user.getLogin().isBlank()) {
             isUserBirthdayValid(user);
-        } catch (RuntimeException e) {
+        } else {
             log.warn("Пустой логин");
             throw new ValidationException("Логин не может быть пустым");
         }
     }
 
     private void isUserBirthdayValid(User user) {
-        if (user.getLogin().isBlank()) {
-            try {
-                isUserNameBlank(user);
-            } catch (RuntimeException e) {
-                log.warn("Дата рождения не может быть в будущем");
-                throw new ValidationException("Дата рождения не может быть в будущем");
-            }
+        if (!user.getBirthday().isAfter(LocalDateTime.now())) {
+            isUserNameBlank(user);
+        } else {
+            log.warn("Дата рождения не может быть в будущем");
+            throw new ValidationException("Дата рождения не может быть в будущем");
         }
     }
 
     private void isUserNameBlank(User user) {
-        if (user.getBirthday().isAfter(LocalDateTime.now())) {
-            if (user.getName().isBlank()) {
-                user.setName(user.getLogin());
-            }
-            users.put(getIdCounter(), user);
+        if (user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
+        users.put(getIdCounter(), user);
     }
 
     public int getIdCounter() {
