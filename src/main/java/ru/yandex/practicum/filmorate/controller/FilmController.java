@@ -63,38 +63,35 @@ public class FilmController {
     }
 
     private void isFilmTitleValid(Film film) {
-        if (!film.getName().isBlank()) {
-            isFilmDescriptionLengthValid(film);
-        } else {
+        if (film.getName().isBlank()) {
             log.warn(Constants.FILM_HAS_NO_NAME);
             throw new ValidationException(Constants.FILM_HAS_NO_NAME + Constants.PLEASE_FIX_AND_TRY_AGAIN);
         }
+        isFilmDescriptionLengthValid(film);
     }
 
     private void isFilmDescriptionLengthValid(Film film) {
-        if (film.getDescription().length() < 200 && !film.getDescription().isBlank()) {
-            isFilmReleaseDateNotEmpty(film);
-        } else {
+        if (film.getDescription().length() >= 200 || film.getDescription().isBlank()) {
             log.warn(Constants.FILM_MAX_DESCRIPTION_LENGTH);
             throw new ValidationException(Constants.FILM_MAX_DESCRIPTION_LENGTH);
         }
+        isFilmReleaseDateNotEmpty(film);
     }
 
     private void isFilmReleaseDateNotEmpty(Film film) {
-        if (film.getReleaseDate().isPresent()) {
-            isFilmReleaseDateValid(film);
-        } else {
+        if (film.getReleaseDate() == null) {
             log.warn(Constants.FILM_HAS_NO_RELEASE_DATE);
         }
+        isFilmReleaseDateValid(film);
     }
 
     private void isFilmReleaseDateValid(Film film) {
-        if (!film.getReleaseDate().get().isBefore(LocalDate.of(1895, 12, 28))) {
-            isFilmDurationPositive(film);
-        } else {
+        LocalDate releaseDate = film.getReleaseDate();
+        if (releaseDate == null || releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {
             log.warn(Constants.FILM_INVALID_RELEASE_DATE);
             throw new ValidationException(Constants.FILM_INVALID_RELEASE_DATE);
         }
+        isFilmDurationPositive(film);
     }
 
     private void isFilmDurationPositive(Film film) {
