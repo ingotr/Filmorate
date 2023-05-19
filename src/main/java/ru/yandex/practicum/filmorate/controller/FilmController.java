@@ -48,44 +48,36 @@ public class FilmController {
     }
 
     private void isFilmTitleValid(Film film) {
-        try {
-            if (!film.getName().isBlank()) {
-                isFilmDescriptionLengthValid(film);
-            }
-        } catch (RuntimeException e) {
+        if (!film.getName().isBlank()) {
+            isFilmDescriptionLengthValid(film);
+        } else {
             log.warn("Не указано название фильма");
             throw new ValidationException("Не указано название фильма. Укажите и попробуйте снова");
         }
     }
 
     private void isFilmDescriptionLengthValid(Film film) {
-        try {
-            if (film.getDescription().length() <= 200) {
-                isFilmReleaseDateValid(film);
-            }
-        } catch (RuntimeException e) {
+        if (film.getDescription().length() <= 200) {
+            isFilmReleaseDateValid(film);
+        } else {
             log.warn("Длина описания больше 200 символов");
             throw new ValidationException("Максимальная длина описания - 200 символов.");
         }
     }
 
     private void isFilmReleaseDateValid(Film film) {
-        try {
-            if (!film.getReleaseDate().isBefore(LocalDateTime.of(1895, 12, 28, 1, 1))) {
-                isFilmDurationPositive(film);
-            }
-        } catch (RuntimeException e) {
+        if (!film.getReleaseDate().isBefore(LocalDateTime.of(1895, 12, 28, 1, 1))) {
+            isFilmDurationPositive(film);
+        } else {
             log.warn("Дата релиза раньше 28 декабря 1895 года");
             throw new ValidationException("Дата релиза — не может быть раньше 28 декабря 1895 года");
         }
     }
 
     private void isFilmDurationPositive(Film film) {
-        try {
-            if (film.getDuration() > 0) {
-                films.put(getIdCounter(), film);
-            }
-        } catch (RuntimeException e) {
+        if (film.getDuration() > 0) {
+            films.put(getIdCounter(), film);
+        } else {
             log.warn("Продолжительность фильма отрицательная или равна 0");
             throw new ValidationException("Продолжительность фильма должна быть положительной");
         }

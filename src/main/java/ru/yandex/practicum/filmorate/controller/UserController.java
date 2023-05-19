@@ -63,7 +63,7 @@ public class UserController {
         try {
             isUserBirthdayValid(user);
         } catch (RuntimeException e) {
-            log.warn("Пусто логин");
+            log.warn("Пустой логин");
             throw new ValidationException("Логин не может быть пустым");
         }
     }
