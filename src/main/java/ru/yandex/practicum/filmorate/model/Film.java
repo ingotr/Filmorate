@@ -19,4 +19,5 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительной")
     private final Integer duration;
     private Integer id;
+    private Integer likeCount;
 }
