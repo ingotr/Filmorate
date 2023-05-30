@@ -48,7 +48,7 @@ class FilmControllerTest {
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
 
-        Film newFilm = filmController.addFilm(film);
+        Film newFilm = filmController.add(film);
         List<Film> films = filmController.getAllFilms();
         assertNotNull(newFilm, Constants.NEW_FILM_NOT_FOUND);
         assertEquals(film, newFilm, Constants.RECEIVED_FILM_AND_NEW_FILM_DIFFERENT);
@@ -74,7 +74,7 @@ class FilmControllerTest {
         Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1844, 5, 24), 154, null);
         List<Film> films = filmController.getAllFilms();
 
-        assertThrows(ValidationException.class, () -> filmController.addFilm(film),
+        assertThrows(ValidationException.class, () -> filmController.add(film),
                 "Дата релиза — не может быть раньше 28 декабря 1895 года.");
         assertEquals(0, films.size(), "Число фильмов отличается от 0");
     }
@@ -90,7 +90,7 @@ class FilmControllerTest {
     void shouldAddFilmWhenEmptyRequestBody() {
         List<Film> films = filmController.getAllFilms();
 
-        assertThrows(ValidationException.class, () -> filmController.addFilm(null),
+        assertThrows(ValidationException.class, () -> filmController.add(null),
                 "Получен пустой запрос");
         assertEquals(0, films.size(), "Число фильмов отличается от 0");
     }
@@ -100,7 +100,7 @@ class FilmControllerTest {
         Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24), 154, null);
         List<Film> films = filmController.getAllFilms();
 
-        assertThrows(ValidationException.class, () -> filmController.updateFilm(film),
+        assertThrows(ValidationException.class, () -> filmController.update(film),
                 "Не указан Id фильма");
         assertEquals(0, films.size(), "Число фильмов больше 0");
     }
@@ -108,7 +108,7 @@ class FilmControllerTest {
     @Test
     void shouldUpdateFilmWithEmptyRequest() {
         List<Film> films = filmController.getAllFilms();
-        assertThrows(NullPointerException.class, () -> filmController.updateFilm(null),
+        assertThrows(NullPointerException.class, () -> filmController.update(null),
                 "Получен пустой запрос");
         assertEquals(0, films.size(), "Число фильмов больше 0");
     }

@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -9,58 +9,37 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.validation.FilmValidator;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
 public class FilmController {
-    private final Map<Integer, Film> films = new HashMap<>();
-    private final FilmValidator filmValidator;
-    private int idCounter = 1;
-
-    @Autowired
-    public FilmController() {
-        this.filmValidator = new FilmValidator();
-    }
+    private FilmStorage filmStorage;
 
     @GetMapping
     public List<Film> getAllFilms() {
-        log.debug("- getResponse: Текущее количество фильмов: {}", films.size());
-
-        return new ArrayList<>(films.values());
+        return filmStorage.getAll();
     }
 
     @PostMapping
-    public Film addFilm(@Valid @RequestBody Film film) {
+    public Film add(@Valid @RequestBody Film film) {
         log.debug("+ postResponse: {}", film);
-        boolean valid = filmValidator.validate(film);
-        if (valid) {
-            film.setId(getIdCounter());
-            films.put(film.getId(), film);
-            log.debug("- postResponse: {}", film);
-        }
-        log.debug("- createFilm() add film: {}", valid);
-
-        return film;
+        return filmStorage.add(film);
     }
 
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
+    public Film update(@Valid @RequestBody Film film) {
         log.debug("+ putResponse: {}", film);
-        filmValidator.validateFilmHasId(films, film);
-        log.debug("- putResponse: {}", film);
-
-        return film;
+        return filmStorage.update(film);
     }
 
-    public int getIdCounter() {
-        return idCounter++;
+    @DeleteMapping
+    public void delete(Film film) {
+        log.debug("+ deleteResponse: {}", film);
+        filmStorage.delete(film);
     }
 }
