@@ -7,6 +7,10 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.constants.Constants;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.user.impl.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.validation.UserValidator;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -25,12 +29,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Slf4j
 class UserControllerTest {
 
+    private UserStorage userStorage;
+    private UserService userService;
     private UserController userController;
     private ValidatorFactory factory;
+    private UserValidator userValidator;
     private Validator validator;
 
     @AfterEach
     void cleanUp() {
+        userValidator = null;
+        userStorage = null;
+        userService = null;
         userController = null;
         validator = null;
         factory = null;
@@ -38,14 +48,19 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
+        userValidator = new UserValidator();
+        userStorage = new InMemoryUserStorage(userValidator);
+        userService = new UserService(userStorage);
+        userController = new UserController(userService);
         factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
 
     @Test
     void shouldAddUser() {
-        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(1993, 7, 12), null, "Иван");
+        Set<Long> friends = Set.of(2L, 3L, 4L);
+        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(1993, 7, 12),
+                null, "Иван", friends);
         User newUser = userController.addUser(user);
         List<User> users = userController.getAllUsers();
         Set<ConstraintViolation<User>> violations = validator.validate(newUser);
@@ -59,7 +74,9 @@ class UserControllerTest {
 
     @Test
     void shouldAddUserWhenBirthdayInFuture() {
-        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(2024, 7, 12), null, "Иван");
+        Set<Long> friends = Set.of(2L, 3L, 4L);
+        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(2024, 7, 12),
+                null, "Иван", friends);
         User newUser = userController.addUser(user);
         Set<ConstraintViolation<User>> violations = validator.validate(newUser);
         assertFalse(violations.isEmpty());
@@ -67,14 +84,18 @@ class UserControllerTest {
 
     @Test
     void shouldAddUserWhenFailLogin() {
-        User user = new User("ivanov@yandex.ru", null, LocalDate.of(1993, 7, 12), null, "Иван");
+        Set<Long> friends = Set.of(2L, 3L, 4L);
+        User user = new User("ivanov@yandex.ru", null, LocalDate.of(1993, 7, 12),
+                null, "Иван", friends);
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     void shouldAddUserWithEmptyName() {
-        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(1993, 7, 12), null, null);
+        Set<Long> friends = Set.of(2L, 3L, 4L);
+        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(1993, 7, 12),
+                null, null, friends);
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertTrue(violations.isEmpty());
         userController.addUser(user);
@@ -94,7 +115,9 @@ class UserControllerTest {
 
     @Test
     void shouldUpdateUserWithEmptyId() {
-        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(1993, 7, 12), null, "Иван");
+        Set<Long> friends = Set.of(2L, 3L, 4L);
+        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(1993, 7, 12),
+                null, "Иван", friends);
         List<User> users = userController.getAllUsers();
         assertThrows(ValidationException.class, () -> userController.updateUser(user),
                 "Не указан Id пользователя");
@@ -103,7 +126,9 @@ class UserControllerTest {
 
     @Test
     void shouldUpdateUserWithUnknownId() {
-        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(1993, 7, 12), 9999, "Иван");
+        Set<Long> friends = Set.of(2L, 3L, 4L);
+        User user = new User("ivanov@yandex.ru", "ivanov93", LocalDate.of(1993, 7, 12),
+                9999, "Иван", friends);
         List<User> users = userController.getAllUsers();
         assertThrows(ValidationException.class, () -> userController.updateUser(user),
                 "Не указан Id пользователя");

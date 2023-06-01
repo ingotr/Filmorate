@@ -7,6 +7,10 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.constants.Constants;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.impl.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.validation.FilmValidator;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -24,12 +28,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 class FilmControllerTest {
+    private FilmValidator filmValidator;
+    private FilmStorage filmStorage;
+    private FilmService filmService;
     private FilmController filmController;
     private ValidatorFactory factory;
     private Validator validator;
 
     @AfterEach
     void cleanUp() {
+        filmStorage = null;
+        filmService = null;
         filmController = null;
         validator = null;
         factory = null;
@@ -37,14 +46,18 @@ class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
+        filmValidator = new FilmValidator();
+        filmStorage = new InMemoryFilmStorage(filmValidator);
+        filmService = new FilmService(filmStorage);
+        filmController = new FilmController(filmService);
         factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
 
     @Test
     void shouldAddFilm() {
-        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24), 154, null);
+        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино",
+                LocalDate.of(1994, 5, 24), 154, null, 0);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
 
@@ -57,21 +70,24 @@ class FilmControllerTest {
 
     @Test
     void shouldAddFilmWithEmptyName() {
-        Film film = new Film("", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24), 154, null);
+        Film film = new Film("", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24),
+                154, null, 0);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     void shouldAddFilmWithLongDescription() {
-        Film film = new Film("Криминальное чтиво", Constants.LOREM_IPSUM, LocalDate.of(1994, 5, 24), 154, null);
+        Film film = new Film("Криминальное чтиво", Constants.LOREM_IPSUM, LocalDate.of(1994, 5, 24),
+                154, null, 0);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     void shouldAddFilmWithInvalidReleaseDate() {
-        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1844, 5, 24), 154, null);
+        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1844, 5, 24),
+                154, null, 0);
         List<Film> films = filmController.getAllFilms();
 
         assertThrows(ValidationException.class, () -> filmController.add(film),
@@ -81,7 +97,8 @@ class FilmControllerTest {
 
     @Test
     void shouldAddFilmWithInvalidDuration() {
-        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24), -2, null);
+        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24),
+                -2, null, 0);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
     }
@@ -97,7 +114,8 @@ class FilmControllerTest {
 
     @Test
     void shouldUpdateFilmWithEmptyId() {
-        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24), 154, null);
+        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24),
+                154, null, 0);
         List<Film> films = filmController.getAllFilms();
 
         assertThrows(ValidationException.class, () -> filmController.update(film),

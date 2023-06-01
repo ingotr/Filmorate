@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.storage.film.impl;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -13,11 +15,17 @@ import java.util.Map;
 
 @Component
 @Slf4j
+@Data
 public class InMemoryFilmStorage implements FilmStorage {
 
     private final Map<Integer, Film> films = new HashMap<>();
     private FilmValidator filmValidator;
     private int idCounter = 1;
+
+    @Autowired
+    public InMemoryFilmStorage(FilmValidator filmValidator) {
+        this.filmValidator = filmValidator;
+    }
 
     @Override
     public Film add(Film film) {

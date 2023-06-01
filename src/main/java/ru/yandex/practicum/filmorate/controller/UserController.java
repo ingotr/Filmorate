@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -18,25 +19,31 @@ import java.util.List;
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
-    private UserStorage userStorage;
+
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public List<User> getAllUsers() {
-        return userStorage.getAll();
+        return userService.getAll();
     }
 
     @PostMapping
     public User addUser(@Valid @RequestBody User user) {
-        return userStorage.add(user);
+        return userService.add(user);
     }
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        return userStorage.update(user);
+        return userService.update(user);
     }
 
     @DeleteMapping
     public void delete(@Valid @RequestBody User user) {
-        userStorage.delete(user);
+        userService.delete(user);
     }
 }
