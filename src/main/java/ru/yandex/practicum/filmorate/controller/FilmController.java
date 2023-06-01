@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/films")
@@ -29,6 +31,11 @@ public class FilmController {
     @GetMapping
     public List<Film> getAllFilms() {
         return filmService.getAll();
+    }
+
+    @GetMapping("/{filmId}")
+    public Optional<Film> getById(@PathVariable int filmId) {
+        return filmService.getById(filmId);
     }
 
     @PostMapping
@@ -47,5 +54,24 @@ public class FilmController {
     public void delete(Film film) {
         log.debug("+ deleteResponse: {}", film);
         filmService.delete(film);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable int id, @PathVariable int userId) {
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteLike(@PathVariable int id, @PathVariable int userId) {
+        filmService.deleteLike(id, userId);
+    }
+
+    @GetMapping("/popular?count={count}")
+    public List<Film> getPopularFilms(@PathVariable int count) {
+        if (count > 0) {
+            return filmService.getPopularFilms(count);
+        } else {
+            return filmService.getPopularFilms(10);
+        }
     }
 }

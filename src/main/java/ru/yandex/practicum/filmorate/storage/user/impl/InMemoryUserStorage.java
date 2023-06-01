@@ -6,10 +6,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
@@ -52,6 +49,46 @@ public class InMemoryUserStorage implements UserStorage {
     public List<User> getAll() {
         log.debug("- getResponse: Текущее количество пользователей: {}", users.size());
         return new ArrayList<>(users.values());
+    }
+
+    public Optional<User> getById(int userId) {
+        return users.values().stream()
+                .filter(x -> x.getId() == userId)
+                .findFirst();
+    }
+
+    @Override
+    public void addFriend(int id, int friendId) {
+        users.get(id).getFriends().add((long) friendId);
+        users.get(friendId).getFriends().add((long) id);
+        log.debug("Пользователю id {} добавлен новый друг с Id {}", id, friendId);
+    }
+
+    @Override
+    public void deleteFriend(int id, int friendId) {
+        Set<Long> friends = users.get(id).getFriends();
+        if (!friends.isEmpty()) {
+            friends.remove((long) friendId);
+            log.debug("У пользователя {} удален друг с Id {}", id, friendId);
+        } else {
+            log.debug("Список друзей пуст");
+        }
+    }
+
+    @Override
+    public Set<Long> getFriends(int id) {
+        if (users.get(id).getFriends().isEmpty()) {
+            log.debug("Список друзей пуст");
+        }
+        return users.get(id).getFriends();
+    }
+
+    @Override
+    public Set<Long> getCommonFriends(int id, int otherId) {
+        Set<Long> currentUserFriends = users.get(id).getFriends();
+        Set<Long> otherUserFriends = users.get(otherId).getFriends();
+        currentUserFriends.retainAll(otherUserFriends);
+        return currentUserFriends;
     }
 
     public int getIdCounter() {
