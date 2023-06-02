@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.validation.FilmValidator;
@@ -51,6 +52,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void delete(Film film) {
+        filmValidator.validateFilmHasId(films, film);
         films.remove(film.getId());
     }
 
@@ -61,6 +63,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     public Optional<Film> getById(int filmId) {
+        if (!filmValidator.validateFilmId(films, filmId)) {
+            log.error("Передан несуществующий filmId {}", filmId);
+        }
+
         return films.values().stream()
                 .filter(x -> x.getId() == filmId)
                 .findFirst();
@@ -68,21 +74,29 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void addLike(int id, int userId) {
-        if (!films.get(id).getLikes().contains((long) userId)) {
-            films.get(id).getLikes().add((long) userId);
-            log.debug("Пользователь с userId:{} добавил лайк фильму с id:{}", userId, id);
+        if (filmValidator.validateFilmId(films, id) && userId > 0) {
+            if (!films.get(id).getLikes().contains((long) userId)) {
+                films.get(id).getLikes().add((long) userId);
+                log.debug("Пользователь с userId:{} добавил лайк фильму с id:{}", userId, id);
+            } else {
+                log.debug("Пользователь с userId:{} уже добавил лайк этому фильму", userId);
+            }
         } else {
-            log.debug("Пользователь с userId:{} уже добавил лайк этому фильму", userId);
+            throw new ValidationException("Получен запрос с пустым id или filmId");
         }
     }
 
     @Override
     public void deleteLike(int id, int userId) {
-        if (!films.get(id).getLikes().isEmpty()) {
-            films.get(id).getLikes().remove((long) userId);
-            log.debug("Пользователь с userId:{} удалил лайк фильму с id:{}", userId, id);
+        if (filmValidator.validateFilmId(films, id) && userId > 0) {
+            if (!films.get(id).getLikes().isEmpty()) {
+                films.get(id).getLikes().remove((long) userId);
+                log.debug("Пользователь с userId:{} удалил лайк фильму с id:{}", userId, id);
+            } else {
+                log.debug("Список лайков фильма id{} пуст!", id);
+            }
         } else {
-            log.debug("Список лайков фильма id{} пуст!", id);
+            throw new ValidationException("Получен запрос с пустым id или filmId");
         }
     }
 

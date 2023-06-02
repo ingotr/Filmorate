@@ -52,6 +52,10 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     public Optional<User> getById(int userId) {
+        if (!userValidator.validateUserId(users, userId)) {
+            log.error("Передан несуществующий userId {}", userId);
+        }
+
         return users.values().stream()
                 .filter(x -> x.getId() == userId)
                 .findFirst();
@@ -59,6 +63,13 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void addFriend(int id, int friendId) {
+        if (!userValidator.validateUserId(users, id)) {
+            log.error("Передан несуществующий id {}", id);
+        }
+        if (!userValidator.validateUserId(users, friendId)) {
+            log.error("Передан несуществующий friendId {}", friendId);
+        }
+
         users.get(id).getFriends().add((long) friendId);
         users.get(friendId).getFriends().add((long) id);
         log.debug("Пользователю id {} добавлен новый друг с Id {}", id, friendId);
@@ -66,6 +77,13 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void deleteFriend(int id, int friendId) {
+        if (!userValidator.validateUserId(users, id)) {
+            log.error("Передан несуществующий id {}", id);
+        }
+        if (!userValidator.validateUserId(users, friendId)) {
+            log.error("Передан несуществующий friendId {}", friendId);
+        }
+
         Set<Long> friends = users.get(id).getFriends();
         if (!friends.isEmpty()) {
             friends.remove((long) friendId);
@@ -77,17 +95,29 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public Set<Long> getFriends(int id) {
-        if (users.get(id).getFriends().isEmpty()) {
+        if (!userValidator.validateUserId(users, id)) {
+            log.error("Передан несуществующий id {}", id);
+        }
+        if (userValidator.validateUserFriendList(users, id)) {
             log.debug("Список друзей пуст");
         }
+
         return users.get(id).getFriends();
     }
 
     @Override
     public Set<Long> getCommonFriends(int id, int otherId) {
+        if (!userValidator.validateUserId(users, id)) {
+            log.error("Передан несуществующий id {}", id);
+        }
+        if (!userValidator.validateUserId(users, otherId)) {
+            log.error("Передан несуществующий otherId {}", otherId);
+        }
+
         Set<Long> currentUserFriends = users.get(id).getFriends();
         Set<Long> otherUserFriends = users.get(otherId).getFriends();
         currentUserFriends.retainAll(otherUserFriends);
+
         return currentUserFriends;
     }
 

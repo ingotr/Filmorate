@@ -44,4 +44,17 @@ public class FilmValidator {
 
         log.debug("Обновлен фильм с Id: {}", film.getId());
     }
+
+    public boolean validateFilmId(Map<Integer, Film> films, int filmId) {
+        log.debug("Фильм на валидацию: {}", filmId);
+        if (filmId < 1) {
+            throw new ValidationException("Получен запрос с пустым или некорректным filmId");
+        }
+        if (!films.containsKey(filmId)) {
+            log.error("Фильм с {} не найден", filmId);
+            throw new ValidationException("Фильм с " + filmId + " + не найден!");
+        }
+
+        return true;
+    }
 }
