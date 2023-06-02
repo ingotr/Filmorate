@@ -4,8 +4,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Component
 public interface UserStorage {
@@ -17,13 +15,13 @@ public interface UserStorage {
 
     List<User> getAll();
 
-    Optional<User> getById(int userId);
+    User getById(int userId);
 
     void addFriend(int id, int friendId);
 
     void deleteFriend(int id, int friendId);
 
-    Set<Long> getFriends(int id);
+    List<User> getFriends(int id);
 
-    Set<Long> getCommonFriends(int id, int otherId);
+    List<User> getCommonFriends(int id, int otherId);
 }

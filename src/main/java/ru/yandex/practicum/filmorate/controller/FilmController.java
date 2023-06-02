@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -20,9 +23,9 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
+@ResponseBody
 @RequestMapping("/films")
 @Slf4j
 public class FilmController {
@@ -39,7 +42,7 @@ public class FilmController {
     }
 
     @GetMapping("/{filmId}")
-    public Optional<Film> getById(@PathVariable int filmId) {
+    public Film getById(@PathVariable int filmId) {
         return filmService.getById(filmId);
     }
 
@@ -63,38 +66,46 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable int id, @PathVariable int userId) {
-        filmService.addLike(id, userId);
+        if (userId < 0) {
+            throw new ValidationException("ID пользователя должен быть больше или равен 0.");
+        } else {
+            filmService.addLike(id, userId);
+        }
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable int id, @PathVariable int userId) {
-        filmService.deleteLike(id, userId);
-    }
-
-    @GetMapping("/popular?count={count}")
-    public List<Film> getPopularFilms(@PathVariable int count) {
-        if (count > 0) {
-            return filmService.getPopularFilms(count);
+        if (userId < 0) {
+            throw new ValidationException("ID пользователя должен быть больше или равен 0.");
         } else {
-            return filmService.getPopularFilms(10);
+            filmService.deleteLike(id, userId);
         }
     }
 
-    @ExceptionHandler
+    @GetMapping("/popular")
+    public List<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("Размер списка должен быть больше или равен 0.");
+        }
+        return filmService.getPopularFilms(count);
+    }
+
+    @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleValidationException(final ValidationException e) {
         return Map.of("validationError", e.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNullPointerException(final NullPointerException e) {
-        return Map.of("nullPointer", "Фильм с указанными параметрами не найден.");
+    public Map<String, String> handleNotFoundException(final NotFoundException e) {
+        return Map.of("notFoundError", e.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleRuntimeException(final RuntimeException e) {
+        log.error("Internal server error: {}", e.getMessage(), e);
         return Map.of("internalError", "Внутренняя ошибка сервера.");
     }
 }

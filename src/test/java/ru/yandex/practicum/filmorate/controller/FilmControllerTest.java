@@ -17,7 +17,9 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,7 +59,7 @@ class FilmControllerTest {
     @Test
     void shouldAddFilm() {
         Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино",
-                LocalDate.of(1994, 5, 24), 154, null, 0);
+                LocalDate.of(1994, 5, 24), 154, null, null);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
 
@@ -71,7 +73,7 @@ class FilmControllerTest {
     @Test
     void shouldAddFilmWithEmptyName() {
         Film film = new Film("", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24),
-                154, null, 0);
+                154, null, new HashSet<>());
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
     }
@@ -79,7 +81,7 @@ class FilmControllerTest {
     @Test
     void shouldAddFilmWithLongDescription() {
         Film film = new Film("Криминальное чтиво", Constants.LOREM_IPSUM, LocalDate.of(1994, 5, 24),
-                154, null, 0);
+                154, null, new HashSet<>());
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
     }
@@ -87,7 +89,7 @@ class FilmControllerTest {
     @Test
     void shouldAddFilmWithInvalidReleaseDate() {
         Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1844, 5, 24),
-                154, null, 0);
+                154, null, new HashSet<>());
         List<Film> films = filmController.getAllFilms();
 
         assertThrows(ValidationException.class, () -> filmController.add(film),
@@ -98,7 +100,7 @@ class FilmControllerTest {
     @Test
     void shouldAddFilmWithInvalidDuration() {
         Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24),
-                -2, null, 0);
+                -2, null, new HashSet<>());
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
     }
@@ -115,7 +117,7 @@ class FilmControllerTest {
     @Test
     void shouldUpdateFilmWithEmptyId() {
         Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино", LocalDate.of(1994, 5, 24),
-                154, null, 0);
+                154, null, new HashSet<>());
         List<Film> films = filmController.getAllFilms();
 
         assertThrows(ValidationException.class, () -> filmController.update(film),
@@ -129,5 +131,53 @@ class FilmControllerTest {
         assertThrows(NullPointerException.class, () -> filmController.update(null),
                 "Получен пустой запрос");
         assertEquals(0, films.size(), "Число фильмов больше 0");
+    }
+
+    @Test
+    void shouldGetById() {
+        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино",
+                LocalDate.of(1994, 5, 24), 154, null, null);
+        filmController.add(film);
+        Optional<Film> filmById = filmController.getById(1);
+
+        assertNotNull(filmById, "Фильм не найден");
+        assertTrue(filmById.isPresent(), "Фильм не найден");
+        Film actualFilm = filmById.get();
+        assertEquals(film, actualFilm, "Фильмы отличаются");
+    }
+
+    @Test
+    void shouldAddLike() {
+        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино",
+                LocalDate.of(1994, 5, 24), 154, null, null);
+        Film addedFilm = filmController.add(film);
+        filmController.addLike(addedFilm.getId(), 1);
+        assertEquals(1, addedFilm.getLikes().size(), "Число лайков не равно 1");
+    }
+
+    @Test
+    void shouldDeleteLike() {
+        Film film = new Film("Криминальное чтиво", "Фильм Квентина Тарантино",
+                LocalDate.of(1994, 5, 24), 154, null, null);
+        Film addedFilm = filmController.add(film);
+        filmController.addLike(addedFilm.getId(), 1);
+        filmController.deleteLike(addedFilm.getId(), 1);
+        assertEquals(0, addedFilm.getLikes().size(), "Число лайков не равно 0");
+    }
+
+    @Test
+    void shouldGetPopularFilms() {
+        Film filmOne = new Film("Криминальное чтиво", "Фильм Квентина Тарантино",
+                LocalDate.of(1994, 5, 24), 154, null, null);
+        Film addedFilm = filmController.add(filmOne);
+        filmController.addLike(addedFilm.getId(), 1);
+        filmController.addLike(addedFilm.getId(), 2);
+        Film filmTwo = new Film("Криминальное чтиво 2", "Фильм Квентина Тарантино",
+                LocalDate.of(2004, 5, 24), 104, null, null);
+        Film addedFilmTwo = filmController.add(filmTwo);
+        filmController.addLike(addedFilmTwo.getId(), 1);
+
+        List<Film> popularFilms = filmController.getPopularFilms(2);
+        assertEquals(2, popularFilms.size(), "Число популярных фильмов не равно 2");
     }
 }

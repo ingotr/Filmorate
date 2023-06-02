@@ -2,15 +2,13 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -41,7 +39,7 @@ public class UserService {
         return userStorage.getAll();
     }
 
-    public Optional<User> getById(int userId) {
+    public User getById(int userId) {
         return userStorage.getById(userId);
     }
 
@@ -57,11 +55,11 @@ public class UserService {
         userStorage.deleteFriend(id, friendId);
     }
 
-    public Set<Long> getFriends(int id) {
+    public List<User> getFriends(int id) {
         return userStorage.getFriends(id);
     }
 
-    public Set<Long> getCommonFriends(int id, int otherId) {
+    public List<User> getCommonFriends(int id, int otherId) {
         return userStorage.getCommonFriends(id, otherId);
     }
 }

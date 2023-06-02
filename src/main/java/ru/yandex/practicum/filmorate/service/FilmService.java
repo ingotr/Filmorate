@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.List;
-import java.util.Optional;
 
 @Component
 @Slf4j
@@ -34,7 +33,7 @@ public class FilmService {
         return filmStorage.getAll();
     }
 
-    public Optional<Film> getById(int filmId) {
+    public Film getById(int filmId) {
         return filmStorage.getById(filmId);
     }
 
